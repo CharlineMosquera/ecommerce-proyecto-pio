@@ -8,10 +8,10 @@ const conectarDB = async () => {
             useNewUrlParser: true,
             useUnifiedTopology: true
         });
-        console.log("Conexión a la base de datos exitosa");
+        console.log("Conexión exitosa a MongoDB");
     } catch (error) {
-        console.error("Error al conectar a la base de datos:", error);
-        process.exit();
+        console.error("Error en la conexion a MongoDB: ", error);
+        process.exit(1);
     }
 };
 

@@ -1,10 +1,14 @@
 const Cart = require("../models/cart");
 
 exports.createCart = async (req, res) => {
+  const { userId, products } = req.body;
   try {
-    const newCart = new Cart(req.body);
+    const newCart = new Cart({
+      userId,
+      products,
+    });
     await newCart.save();
-    res.status(201).json(newCart);
+    res.status(201).json({ message: "Carrito creado", cart: newCart });
   } catch (error) {
     res
       .status(500)
@@ -13,8 +17,14 @@ exports.createCart = async (req, res) => {
 };
 
 exports.getCart = async (req, res) => {
+  const { userId } = req.params;
   try {
-    const cart = await Cart.findOne({ user: req.params.userId }).populate("products.product");
+    const cart = await Cart.findOne({ userId: userId }).populate(
+      "products.product"
+    );
+    if (!cart) {
+      return res.status(404).json({ mensaje: "Carrito no encontrado" });
+    }
     res.status(200).json(cart);
   } catch (error) {
     res
@@ -24,25 +34,37 @@ exports.getCart = async (req, res) => {
 };
 
 exports.updateCart = async (req, res) => {
+  const { userId, products } = req.body;
   try {
-    const updatedCart = await Cart.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    res.status(200).json(updatedCart);
+    const updatedCart = await Cart.findOneAndUpdate(
+      { userId: userId },
+      { products },
+      { new: true }
+    );
+    if (!updatedCart) {
+      return res.status(404).json({ message: "Carrito no encontrado" });
+    }
+    res.status(200).json({ message: "Carrito actualizado", cart: updatedCart });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        message: "Error al actualizar el carrito",
-        error: error.message,
-      });
+    res.status(500).json({
+      message: "Error al actualizar el carrito",
+      error: error.message,
+    });
   }
 };
 
 exports.deleteCart = async (req, res) => {
+  const { userId } = req.params;
   try {
-    await Cart.findByIdAndDelete(req.params.id);
-    res.status(200).json({ message: "Carrito eliminado correctamente" });
+    const cartDeleted = await Cart.findOneAndUpdate(
+      { userId: userId },
+      { products: [] },
+      { new: true }
+    );
+    if (!cartDeleted) {
+      return res.status(404).json({ message: "Carrito no encontrado" });
+    }
+    res.status(200).json({ message: "Carrito vacio", cart: cartDeleted });
   } catch (error) {
     res
       .status(500)
